@@ -14,47 +14,65 @@ public class Contact implements ContactListener {
         Fixture a = contact.getFixtureA();
         Fixture b = contact.getFixtureB();
 
+        if(a == null || b == null)
+            return;
+
         Entity aEnt = (Entity)a.getBody().getUserData();
         Entity bEnt = (Entity)b.getBody().getUserData();
+
+        if(aEnt == null || bEnt == null || aEnt.isDestroyed() || bEnt.isDestroyed())
+            return;
 
         ContactInfo infoA = new ContactInfo(a.getBody(), a, aEnt);
         ContactInfo infoB = new ContactInfo(b.getBody(), b, bEnt);
 
-        if(aEnt == null || bEnt == null)
-            return;
+        //If neither is a sensor... kill both.
+        if((!a.isSensor() && !b.isSensor()) && !infoA.entity.sameTeam(infoB.entity)) {
+            //System.out.println("Destroyed: "+tower.getName()+" and "+missile.getName());
+            infoA.entity.setDestroyed();
+            infoB.entity.setDestroyed();
+
+        //Both are sensors
+        }else if(a.isSensor() && b.isSensor()){
+
+            //If one is a missile and one is a tower (the tower attack range fixture)
+            if(!infoA.entity.sameTeam(infoB.entity) && (hasNames(infoA, infoB, "missile", "tower"))){
+                Entity tower = infoA.entity.getName().equals("tower") ? infoA.entity : infoB.entity;
+                Entity missile = infoA.entity.getName().equals("missile") ? infoA.entity : infoB.entity;
+
+                ((Tower)tower).addTarget(missile);
+
+            //One is a missile and one is a bullet
+            }else if(!infoA.entity.sameTeam(infoB.entity) && hasNames(infoA, infoB, "missile", "bullet")){
+                infoA.entity.setDestroyed();
+                infoB.entity.setDestroyed();
+            }
 
 
+        //One of them is a sensor
+        }else{
+            Entity sensor = (infoA.fixture.isSensor()) ? infoA.entity : infoB.entity;
+            Entity other = (!infoA.fixture.isSensor()) ? infoA.entity : infoB.entity;
 
-        //If one of them is a missile and one is a tower...
-        if((aEnt.getName().equals("tower") || bEnt.getName().equals("tower")) && (aEnt.getName().equals("missile") || bEnt.getName().equals("missile"))){
-            Entity tower = aEnt.getName().equals("tower") ? aEnt : bEnt;
-            Entity missile = aEnt.getName().equals("missile") ? aEnt : bEnt;
+            //If the sensor is a bullet
+            if(sensor.getName().equals("bullet") && !sensor.sameTeam(other)) {
+                other.setDestroyed();
+                sensor.setDestroyed();
 
-            //If neither is a sensor... kill both.
-            if(!a.isSensor() && !b.isSensor()) {
-                //System.out.println("Destroyed: "+tower.getName()+" and "+missile.getName());
-                tower.setDestroyed();
-                missile.setDestroyed();
-
-            //If both are sensors...
-            }else if(a.isSensor() && b.isSensor()){
-
-            //Otherwise, one is a sensor. It's most likely a tower. Check which is a tower and set the other as its target.
-            }else if(a.isSensor() || b.isSensor()){
-                Entity sensor = (infoA.fixture.isSensor()) ? infoA.entity : infoB.entity;
-                Entity other = (!infoA.fixture.isSensor()) ? infoA.entity : infoB.entity;
-
-                System.out.println("sensor: "+sensor.getName()+" other: "+other.getName());
-
-                if(sensor.getName().equals("tower")){
-                    ((Tower)sensor).setTarget(other);
-                }else if(sensor.getName().equals("bullet")){
-                    other.destroy();
-                    sensor.destroy();
-                }
+            //If the sensor is a missile
+            }else if(((hasNames(infoA, infoB, "missile", "tower")  || hasNames(infoA, infoB, "missile", "silo")) && !sensor.sameTeam(other))){
+                sensor.setDestroyed();
+                other.setDestroyed();
             }
         }
+    }
 
+    private boolean oneHasName(ContactInfo infoA, ContactInfo infoB, String name){
+        return infoA.entity.getName().equals(name) || infoB.entity.getName().equals(name);
+    }
+
+    private boolean hasNames(ContactInfo infoA, ContactInfo infoB, String name1, String name2){
+        return (infoA.entity.getName().equals(name1) || infoB.entity.getName().equals(name1)) && (infoA.entity.getName().equals(name2) || infoB.entity.getName().equals(name2));
     }
 
     @Override
