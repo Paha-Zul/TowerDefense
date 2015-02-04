@@ -57,6 +57,14 @@ public class Grid {
                     Node node = this.getNode(xx, yy);
                     if (node != null) {
                         finished = false;
+//                        System.out.println();
+//                        System.out.println("null? node: "+(node==null));
+//                        System.out.println("building: "+(node.building==null));
+//                        if(node.building!=null) {
+//                            System.out.println("building name: " + node.building.getName());
+//                            System.out.println("teamOwner: " + (node.building.getTeamOwner() == null));
+//                        }
+//                        System.out.println("name: "+(name == null));
                         if (node.building != null && node.building.getTeamOwner().getId() == teamID && (name == null || node.building.getName().equals(name)))
                             return node.building;
                     }

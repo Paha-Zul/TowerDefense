@@ -47,6 +47,10 @@ public class Entity {
 
     }
 
+    public void damage(float amount){
+        this.health.y -= amount;
+    }
+
     public Team getTeamOwner(){
         return this.teamOwner;
     }
@@ -68,7 +72,7 @@ public class Entity {
     }
 
     public boolean isDestroyed(){
-        return this.destroyed;
+        return this.destroyed || (this.health.y <= 0);
     }
 
     public void destroy(){

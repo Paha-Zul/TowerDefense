@@ -29,7 +29,7 @@ public class Missile extends Entity{
         this.sprite = new Sprite(missileTexture);
         this.sprite.setPosition(position.x, position.y);
         this.sprite.setCenter(position.x, position.y);
-        this.sprite.setScale(0.35f/ Constants.SCALE);
+        this.sprite.setScale(0.30f/ Constants.SCALE);
         this.world = world;
         this.grid = grid;
 
@@ -47,7 +47,7 @@ public class Missile extends Entity{
         this.body.setUserData(this);
 
         CircleShape circle = new CircleShape();
-        circle.setRadius(0.5f);
+        circle.setRadius(0.4f);
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = circle;
         fixtureDef.isSensor = true;

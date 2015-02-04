@@ -44,8 +44,8 @@ public class Contact implements ContactListener {
 
             //One is a missile and one is a bullet
             }else if(!infoA.entity.sameTeam(infoB.entity) && hasNames(infoA, infoB, "missile", "bullet")){
-                infoA.entity.setDestroyed();
-                infoB.entity.setDestroyed();
+                infoA.entity.damage(50);
+                infoB.entity.damage(50);
             }
 
 

@@ -70,4 +70,9 @@ public class Team {
     public Color getColor(){
         return this.color;
     }
+
+    @Override
+    public String toString() {
+        return "Team: "+this.name+" ID: "+this.getId();
+    }
 }

@@ -70,15 +70,15 @@ public class GameScreen implements Screen, InputProcessor{
 
         game.batch.setProjectionMatrix(game.camera.combined);
         game.batch.begin();
+        this.drawTiles();
 
         ListHolder.update(delta, this.game.batch, this.game);
 
-        this.drawTiles();
         game.batch.end();
 
-        //this.game.box2DDebugRenderer.render(this.game.world, this.game.camera.combined);
+        this.game.box2DDebugRenderer.render(this.game.world, this.game.camera.combined);
 
-        this.renderGrid();
+        //this.renderGrid();
 
         this.moveCamera(delta);
         this.game.camera.update();
