@@ -19,17 +19,11 @@ public class Bullet extends Entity{
     private static Texture bulletTexture = new Texture("Bullet.png");
 
     private float speed = 1000;
-    private float life = 5f;
+    private float life = 0.8f;
     private float lifeCounter = 0;
 
     public Bullet(Vector2 position, float rotation, World world, Team teamOwner, String name, Vector2 health) {
-        super(position, rotation, teamOwner, name, health);
-
-        this.world = world;
-        this.sprite = new Sprite(bulletTexture);
-        this.sprite.setPosition(position.x, position.y);
-        this.sprite.setCenter(position.x, position.y);
-        this.sprite.setScale(0.4f/ Constants.SCALE);
+        super(position, rotation, teamOwner, world, name, health, bulletTexture);
 
         this.createBody();
     }
@@ -80,8 +74,6 @@ public class Bullet extends Entity{
     @Override
     public void render(float delta, SpriteBatch batch) {
         super.render(delta, batch);
-
-        sprite.draw(batch);
     }
 
     @Override

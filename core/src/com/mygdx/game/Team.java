@@ -21,6 +21,8 @@ public class Team {
     private Color color;
     private int id;
 
+    private int money = 100;
+
     public Team(String name){
         this.name = name;
         this.color = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
@@ -32,7 +34,7 @@ public class Team {
 
     }
 
-    public void render(float delta, SpriteBatch batch){
+    public void render(float delta, @NotNull SpriteBatch batch){
         for(ArrayList<Entity> list : buildingMap.values())
             for(Entity ent : list){
                 ent.update(delta);
@@ -46,7 +48,7 @@ public class Team {
         buildingMap.get(name).add(entity);
     }
 
-    public void removeEntity(String name, Entity entity){
+    public void removeEntity(@NotNull String name, @NotNull Entity entity){
         ArrayList<Entity> list = buildingMap.get(name);
         if(list == null) return;
         list.remove(entity);
@@ -69,6 +71,22 @@ public class Team {
 
     public Color getColor(){
         return this.color;
+    }
+
+    public void addMoney(int amount){
+        this.money+=amount;
+    }
+
+    public void subtractMoney(int amount){
+        this.money-=amount;
+    }
+
+    public boolean hasEnoughMoney(int amount){
+        return this.money >= amount;
+    }
+
+    public int getMoney(){
+        return this.money;
     }
 
     @Override

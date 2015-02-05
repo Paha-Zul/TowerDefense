@@ -7,7 +7,10 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.*;
@@ -17,15 +20,22 @@ import com.mygdx.game.entity.*;
  * Created by Paha on 2/3/2015.
  */
 public class GameScreen implements Screen, InputProcessor{
-
     private TowerDefense game;
     private Grid grid;
     private int spawnType = 1;
     private ShapeRenderer renderer;
     private int currTeam = 0;
     private static Texture tileTexture = new Texture("Tile.png");
+    private static Texture resourceTexture = new Texture("Resource.png");
+    private static Texture background = new Texture("Background.png");
 
     private static Color screenColor = new Color(237f/255f, 221f/255f, 221f/255f, 1);
+
+    private Rectangle towerRect = new Rectangle();
+    private Rectangle siloRect = new Rectangle();
+    private Rectangle mineRect = new Rectangle();
+    private Rectangle garageRect = new Rectangle();
+    private Rectangle moneyRect = new Rectangle();
 
     public GameScreen(TowerDefense game){
         this.game = game;
@@ -56,7 +66,6 @@ public class GameScreen implements Screen, InputProcessor{
         Vector2 pos = new Vector2(node.getX()*grid.getSquareSize() + grid.getSquareSize()/2, node.getX()*grid.getSquareSize() + grid.getSquareSize()/2);
 
         Tower tower = new Tower(pos, 0, new Vector2(100,100), team, this.game.world, this.grid);
-        ListHolder.addEntity(tower);
 
         return team;
     }
@@ -74,14 +83,43 @@ public class GameScreen implements Screen, InputProcessor{
 
         ListHolder.update(delta, this.game.batch, this.game);
 
+        this.towerSelectGUI(this.game.batch);
+
         game.batch.end();
 
-        this.game.box2DDebugRenderer.render(this.game.world, this.game.camera.combined);
+        //this.game.box2DDebugRenderer.render(this.game.world, this.game.camera.combined);
 
         //this.renderGrid();
 
+
         this.moveCamera(delta);
         this.game.camera.update();
+    }
+
+    private void towerSelectGUI(SpriteBatch batch){
+        Matrix4 proj = batch.getProjectionMatrix();
+        batch.setProjectionMatrix(this.game.UICamera.combined);
+
+        if(GUI.Button(towerRect, "Tower", batch)){
+            this.spawnType = 1;
+        }
+
+        if(GUI.Button(siloRect, "Silo", batch)){
+            this.spawnType = 2;
+        }
+
+        if(GUI.Button(mineRect, "Mine", batch)){
+            this.spawnType = 3;
+        }
+
+        if(GUI.Button(garageRect, "Garage", batch)){
+            this.spawnType = 4;
+        }
+
+        GUI.Texture(moneyRect, background, batch);
+        GUI.Label("$"+TeamManager.getTeam(this.currTeam).getMoney(), batch, moneyRect, true);
+
+        batch.setProjectionMatrix(proj);
     }
 
     private void drawTiles(){
@@ -93,6 +131,10 @@ public class GameScreen implements Screen, InputProcessor{
         for(int x=0;x<this.grid.getSizeX();x++){
             for(int y=0;y<this.grid.getSizeY();y++){
                 Grid.Node node = this.grid.getNode(x, y);
+                if(node.hasResource()){
+                    this.game.batch.draw(resourceTexture, x, y, squareSize, squareSize);
+                }
+
                 if(node.getController() != null){
                     color = new Color(node.getController().getColor());
                     color.a = 0.5f;
@@ -110,7 +152,6 @@ public class GameScreen implements Screen, InputProcessor{
         float squareSize = this.grid.getSquareSize();
         for(int x=0;x<this.grid.getSizeX();x++){
             for(int y=0;y<this.grid.getSizeY();y++){
-                Grid.Node node = this.grid.getNode(x, y);
                 renderer.rect(x*squareSize, y*squareSize, squareSize, squareSize);
             }
         }
@@ -132,7 +173,21 @@ public class GameScreen implements Screen, InputProcessor{
 
     @Override
     public void resize(int width, int height) {
-        this.game.camera.setToOrtho(false, Gdx.graphics.getWidth()/Constants.SCALE, Gdx.graphics.getHeight()/Constants.SCALE);
+        this.game.camera.setToOrtho(false, width/Constants.SCALE, height/Constants.SCALE);
+        this.game.UICamera.setToOrtho(false, width, height);
+
+        float rectWidth = 100f;
+        float startX = (width - (rectWidth*4f))/2;
+        System.out.println("StartX: "+startX);
+        float rectHeight = (float)height*0.1f;
+
+        towerRect.set(startX, 0, 100, 100);
+        siloRect.set(startX + rectWidth*1, 0, 100, 100);
+        mineRect.set(startX + rectWidth*2, 0, 100, 100);
+        garageRect.set(startX + rectWidth*3, 0, 100, 100);
+
+
+        moneyRect.set(width*0.9f, 0, width*0.1f, width*0.1f);
     }
 
     @Override
@@ -162,13 +217,7 @@ public class GameScreen implements Screen, InputProcessor{
 
     @Override
     public boolean keyUp(int keycode) {
-        if(keycode == Input.Keys.NUM_1)
-            this.spawnType = 1;
-        else if(keycode == Input.Keys.NUM_2)
-            this.spawnType = 2;
-        else if(keycode == Input.Keys.NUM_3)
-            this.spawnType = 3;
-        else if(keycode == Input.Keys.NUMPAD_1)
+       if(keycode == Input.Keys.NUMPAD_1)
             this.currTeam = 0;
         else if(keycode == Input.Keys.NUMPAD_2)
             this.currTeam = 1;
@@ -185,28 +234,42 @@ public class GameScreen implements Screen, InputProcessor{
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         Vector3 worldCoords = this.game.camera.unproject(new Vector3(screenX, screenY, 0));
+        Team team  = TeamManager.getTeam(this.currTeam);
+
+//        if(!team.hasEnoughMoney(100))
+//            return false;
 
         if(this.spawnType == 1) {
             Grid.Node node = this.grid.getNode(worldCoords.x, worldCoords.y);
             if (node != null && node.getBuilding() == null) {
                 if(node.getController() != null && node.getController().getId() == this.currTeam) {
                     Vector2 pos = new Vector2(node.getX() * this.grid.getSquareSize() + this.grid.getSquareSize() * 0.5f, node.getY() * this.grid.getSquareSize() + this.grid.getSquareSize() * 0.5f);
-                    Entity tower = new Tower(pos, 0, new Vector2(100, 100), TeamManager.getTeam(this.currTeam), this.game.world, this.grid);
-                    ListHolder.addEntity(tower);
+                    new Tower(pos, 0, new Vector2(100, 100), team, this.game.world, this.grid);
                 }
             }
         }else if(this.spawnType == 2){
             Grid.Node node = this.grid.getNode(worldCoords.x, worldCoords.y);
             if (node != null && node.getBuilding() == null && (node.getController() != null && node.getController().getId() == this.currTeam)) {
                 Vector2 pos = new Vector2(node.getX() * this.grid.getSquareSize() + this.grid.getSquareSize() * 0.5f, node.getY() * this.grid.getSquareSize() + this.grid.getSquareSize() * 0.5f);
-                Entity bullet = new Silo(pos, 0, TeamManager.getTeam(this.currTeam), "silo", new Vector2(100, 100), this.grid, this.game.world);
-                ListHolder.addEntity(bullet);
+                new Silo(pos, 0, team, "silo", new Vector2(100, 100), this.grid, this.game.world);
             }
         }else if(this.spawnType == 3){
             Grid.Node node = this.grid.getNode(worldCoords.x, worldCoords.y);
             if(node != null) {
-                Entity missile = new Missile(new Vector2(worldCoords.x, worldCoords.y), 0, new Vector2(100, 100), TeamManager.getTeam(this.currTeam), this.game.world, this.grid);
-                ListHolder.addEntity(missile);
+                Vector2 pos = new Vector2(node.getX() * this.grid.getSquareSize() + this.grid.getSquareSize() * 0.5f, node.getY() * this.grid.getSquareSize() + this.grid.getSquareSize() * 0.5f);
+                new Mine(pos, 0, team, this.game.world, new Vector2(100,100));
+            }
+        }else if(this.spawnType == 4){
+            Grid.Node node = this.grid.getNode(worldCoords.x, worldCoords.y);
+            if(node != null) {
+                Vector2 pos = new Vector2(node.getX() * this.grid.getSquareSize() + this.grid.getSquareSize() * 0.5f, node.getY() * this.grid.getSquareSize() + this.grid.getSquareSize() * 0.5f);
+                new Garage(pos, team, this.game.world, 0, new Vector2(100,100), this.grid);
+            }
+        }else if(this.spawnType == 5){
+            Grid.Node node = this.grid.getNode(worldCoords.x, worldCoords.y);
+            if(node != null) {
+                //Entity missile = new Missile(new Vector2(worldCoords.x, worldCoords.y), 0, new Vector2(100, 100), TeamManager.getTeam(this.currTeam), this.game.world, this.grid);
+                Entity tank = new Tank(new Vector2(worldCoords.x, worldCoords.y), 0, team, this.game.world,  new Vector2(100, 100), this.grid);
             }
         }
 

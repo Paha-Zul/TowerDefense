@@ -14,6 +14,7 @@ public class TowerDefense extends Game {
     public SpriteBatch batch;
     private Texture img;
     public OrthographicCamera camera;
+    public OrthographicCamera UICamera;
     public World world;
     public Box2DDebugRenderer box2DDebugRenderer;
 
@@ -22,6 +23,7 @@ public class TowerDefense extends Game {
 		batch = new SpriteBatch();
 		img = new Texture("badlogic.jpg");
         camera = new OrthographicCamera(Gdx.graphics.getWidth()/Constants.SCALE, Gdx.graphics.getHeight()/Constants.SCALE);
+        UICamera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         world = new World(new Vector2(0,0), true);
         box2DDebugRenderer = new Box2DDebugRenderer();
 

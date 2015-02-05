@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.mygdx.game.entity.Entity;
 
 /**
@@ -19,6 +20,11 @@ public class Grid {
         for(int x=0;x<grid.length;x++){
             for(int y=0;y<grid.length;y++){
                 grid[x][y] = new Node(x, y);
+
+                double rand = MathUtils.random();
+                if(rand < 0.01){
+                    grid[x][y].hasResource = true;
+                }
             }
         }
     }
@@ -95,6 +101,7 @@ public class Grid {
 
     public class Node{
         private Team controller;
+        private int controlCounter = 0;
         private int x,y;
         private boolean hasResource;
         private Entity building;
@@ -111,8 +118,6 @@ public class Grid {
         public int getY(){
             return this.y;
         }
-
-
 
         public Entity getBuilding(){
             return this.building;
@@ -131,7 +136,23 @@ public class Grid {
         }
 
         public void setController(Team team){
-            this.controller = team;
+            if(this.controller == null){
+                this.controller = team;
+                this.controlCounter++;
+            }else if(this.controller.getId() == team.getId()) {
+                this.controlCounter++;
+            }
+        }
+
+        public void clearController(Team team){
+            if(this.controller == null)
+                return;
+
+            if(this.controller.getId() == team.getId()) {
+                this.controlCounter--;
+                if(this.controlCounter <= 0)
+                    this.controller = null;
+            }
         }
 
         public void clearBuilding(){

@@ -1,7 +1,6 @@
 package com.mygdx.game.entity;
 
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -25,46 +24,57 @@ public class Tower extends Entity{
     private float shootTimer = 1f;
     private float shootTimerCounter = 0f;
 
-    public Tower(Vector2 position, float rotation, Vector2 health, Team team, World world, Grid grid) {
-        super(position, rotation, team, "tower", health);
+    Functional.Perform<Grid.Node[][]> addController = (g) -> {
+        int radius = 3;
+        int startX = (int)(position.x/grid.getSquareSize()) - radius;
+        int endX = (int)(position.x/grid.getSquareSize()) + radius;
+        int startY = (int)(position.y/grid.getSquareSize()) - radius;
+        int endY = (int)(position.y/grid.getSquareSize()) + radius;
 
-        this.sprite = new Sprite(towerTexture);
-        this.sprite.setPosition(position.x, position.y);
-        this.sprite.setCenter(position.x, position.y);
-        this.sprite.setScale(0.3f/Constants.SCALE);
-        this.sprite.setColor(this.teamOwner.getColor());
-        this.world = world;
+        //Loop over the area
+        for(int x=startX;x<=endX;x++){
+            for(int y=startY;y<=endY;y++){
+                Grid.Node node = grid.getNode(x, y);
+                if(node != null){ //If not null...
+                    node.setController(this.getTeamOwner()); //Set it as ours
+                }
+            }
+        }
+    };
+
+    Functional.Perform<Grid.Node[][]> removeController = (g) -> {
+        int radius = 3;
+        int startX = (int)(position.x/grid.getSquareSize()) - radius;
+        int endX = (int)(position.x/grid.getSquareSize()) + radius;
+        int startY = (int)(position.y/grid.getSquareSize()) - radius;
+        int endY = (int)(position.y/grid.getSquareSize()) + radius;
+
+        //Loop over the area
+        for(int x=startX;x<=endX;x++){
+            for(int y=startY;y<=endY;y++){
+                Grid.Node node = grid.getNode(x, y);
+                if(node != null){ //If not null...
+                    node.clearController(this.getTeamOwner());
+                }
+            }
+        }
+    };
+
+    public Tower(Vector2 position, float rotation, Vector2 health, Team team, World world, Grid grid) {
+        super(position, rotation, team, world, "tower", health, towerTexture);
+
         this.grid = grid;
         this.currNode = grid.getNode(this.position.x, this.position.y);
         this.currNode.setBuilding(this);
 
         this.createBody();
 
-        Functional.Perform<Grid.Node[][]> perform = (g) -> {
-            int radius = 3;
-            int startX = (int)(position.x/grid.getSquareSize()) - radius;
-            int endX = (int)(position.x/grid.getSquareSize()) + radius;
-            int startY = (int)(position.y/grid.getSquareSize()) - radius;
-            int endY = (int)(position.y/grid.getSquareSize()) + radius;
-
-            //Loop over the area
-            for(int x=startX;x<=endX;x++){
-                for(int y=startY;y<=endY;y++){
-                    Grid.Node node = grid.getNode(x, y);
-                    if(node != null){ //If not null...
-                        if(node.getController() == null) //If no one owns it...
-                            node.setController(this.getTeamOwner()); //Set it as ours
-                    }
-                }
-            }
-        };
-
-        grid.perform(perform);
+        grid.perform(addController);
     }
 
     private void createBody(){
         BodyDef bodyDef = new BodyDef();
-        bodyDef.type = BodyDef.BodyType.StaticBody;
+        bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(this.position.x, this.position.y);
         this.body = world.createBody(bodyDef);
         this.body.setUserData(this);
@@ -106,7 +116,6 @@ public class Tower extends Entity{
                     this.shootTimerCounter -= shootTimer;
                     float rot = (float) Math.atan2(target.position.y - this.position.y, target.position.x - this.position.x);
                     Bullet bullet = new Bullet(this.position, rot * MathUtils.radDeg, this.world, this.teamOwner, "bullet", new Vector2(10, 10));
-                    ListHolder.addEntity(bullet);
                 }
             }else
                 this.target = null;
@@ -119,8 +128,6 @@ public class Tower extends Entity{
     @Override
     public void render(float delta, SpriteBatch batch) {
         super.render(delta, batch);
-
-        this.sprite.draw(batch);
     }
 
     public Entity getNextTarget(){
@@ -141,10 +148,11 @@ public class Tower extends Entity{
 
     @Override
     public void destroy() {
-        super.destroy();
-
+        grid.perform(removeController);
         this.currNode.clearBuilding();
         this.grid = null;
         this.currNode = null;
+
+        super.destroy();
     }
 }

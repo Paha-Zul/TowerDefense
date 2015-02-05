@@ -1,7 +1,6 @@
 package com.mygdx.game.entity;
 
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -9,7 +8,6 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
-import com.mygdx.game.Constants;
 import com.mygdx.game.Grid;
 import com.mygdx.game.Team;
 
@@ -24,13 +22,8 @@ public class Missile extends Entity{
     private float speed = 100;
 
     public Missile(Vector2 position, float rotation, Vector2 health, Team team, World world, Grid grid) {
-        super(position, rotation, team, "missile", health);
+        super(position, rotation, team, world, "missile", health, missileTexture);
 
-        this.sprite = new Sprite(missileTexture);
-        this.sprite.setPosition(position.x, position.y);
-        this.sprite.setCenter(position.x, position.y);
-        this.sprite.setScale(0.30f/ Constants.SCALE);
-        this.world = world;
         this.grid = grid;
 
         this.createBody();
@@ -84,8 +77,6 @@ public class Missile extends Entity{
     @Override
     public void render(float delta, SpriteBatch batch) {
         super.render(delta, batch);
-
-        sprite.draw(batch);
     }
 
     @Override
