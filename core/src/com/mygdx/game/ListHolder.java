@@ -17,7 +17,6 @@ public class ListHolder {
 
     public static void update(float delta, SpriteBatch batch, TowerDefense game){
 
-
         for(int i=0;i<quickList.size();i++) {
             Entity ent = quickList.get(i);
             if(ent.isDestroyed()){
@@ -34,4 +33,5 @@ public class ListHolder {
             ent.render(delta, game.batch);
         }
     }
+
 }
