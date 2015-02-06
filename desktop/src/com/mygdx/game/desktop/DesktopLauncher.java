@@ -2,6 +2,7 @@ package com.mygdx.game.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
+import com.badlogic.gdx.graphics.Texture;
 import com.mygdx.game.TowerDefense;
 
 public class DesktopLauncher {
@@ -10,6 +11,8 @@ public class DesktopLauncher {
         config.width = 800;
         config.height = 600;
         config.resizable = false;
+        config.title = "TowerDefense";
+        config.samples = 2;
 		new LwjglApplication(new TowerDefense(), config);
 	}
 }
