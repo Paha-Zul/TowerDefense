@@ -20,7 +20,7 @@ import com.mygdx.game.entity.*;
  * Created by Paha on 2/3/2015.
  */
 public class GameScreen implements Screen, InputProcessor{
-    private TowerDefense game;
+    private final TowerDefense game;
     private Grid grid;
     private int spawnType = 1;
     private ShapeRenderer renderer;
@@ -43,7 +43,7 @@ public class GameScreen implements Screen, InputProcessor{
     public volatile int stepped = 0;
     private Thread box2D;
 
-    public GameScreen(TowerDefense game){
+    public GameScreen(final TowerDefense game){
         this.game = game;
     }
 
@@ -93,16 +93,18 @@ public class GameScreen implements Screen, InputProcessor{
         game.batch.begin();
         this.drawTiles();
 
-        ListHolder.update(delta, this.game.batch, this.game);
+        synchronized (this.game.world) {
+            ListHolder.update(delta, this.game.batch, this.game);
+        }
 
         this.towerSelectGUI(this.game.batch);
 
         this.stepped++;
-        this.game.world.step(delta, 8, 3);
+        //this.game.world.step(delta, 8, 3);
 
         game.batch.end();
 
-        //this.game.box2DDebugRenderer.render(this.game.world, this.game.camera.combined);
+        this.game.box2DDebugRenderer.render(this.game.world, this.game.camera.combined);
 
         //this.renderGrid();
 
